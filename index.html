@@ -1,12 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Everyday Disciples Announcements</title>
+    <title>Everyday Disciples Announcements</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .announcement {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .date {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
-  <h1>📢 Everyday Announcements 📢</h1>
 
-  <p>Announcements will appear here.</p>
+<h1>📢 Everyday Disciples Announcements</h1>
+
+<div id="announcements"></div>
+
+<script>
+fetch('announcements.json')
+  .then(response => response.json())
+  .then(data => {
+
+    let html = '';
+
+    data.reverse().forEach(item => {
+      html += `
+        <div class="announcement">
+          <h2>${item.title}</h2>
+          <div class="date">${item.date}</div>
+          <p>${item.message}</p>
+        </div>
+      `;
+    });
+
+    document.getElementById('announcements').innerHTML = html;
+  })
+  .catch(() => {
+      document.getElementById('announcements').innerHTML =
+      '<p>No announcements yet.</p>';
+  });
+</script>
 
 </body>
 </html>
