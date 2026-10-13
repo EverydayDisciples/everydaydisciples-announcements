@@ -52,12 +52,24 @@ for row in data_rows:
 
     item = dict(zip(headers_row, row))
 
-    announcements.append({
-        "title": str(item.get("Title", "")),
-        "message": str(item.get("Message", "")),
-        "date": str(item.get("PostedDate", "")),
-        "author": str(item.get("Author", ""))
-    })
+from datetime import datetime
+
+date_value = item.get("PostedDate", "")
+
+try:
+    if hasattr(date_value, "strftime"):
+        formatted_date = date_value.strftime("%B %d, %Y %I:%M %p")
+    else:
+        formatted_date = str(date_value)
+except:
+    formatted_date = str(date_value)
+
+announcements.append({
+    "title": str(item.get("Title", "")),
+    "message": str(item.get("Message", "")),
+    "date": formatted_date,
+    "author": str(item.get("Author", ""))
+})
 
 # Save website JSON
 with open("announcements.json", "w", encoding="utf-8") as f:
