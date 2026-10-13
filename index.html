@@ -36,20 +36,26 @@
 
 <script>
 fetch('announcements.json')
-  .then(response => response.json())
-  .then(data => {
+.then(response => response.json())
+.then(data => {
 
     let html = '';
 
     data.slice().reverse().forEach(item => {
-      html += `
-        <div class="announcement">
-          <h2>${item.title}</h2>
-          <div class="date">${item.date}</div>
-          <p>${item.message}</p>
-        </div>
-      `;
+
+        html += `
+            <div class="announcement">
+                <h2>${item.title}</h2>
+                <div class="date">${item.date}</div>
+                <p>${item.message}</p>
+                <small>${item.author}</small>
+            </div>
+        `;
+
     });
+
+    document.getElementById('announcements').innerHTML = html;
+});
 
     document.getElementById('announcements').innerHTML = html;
   })
