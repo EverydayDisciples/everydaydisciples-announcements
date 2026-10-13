@@ -10,7 +10,7 @@ SECRET = os.environ["AZURE_CLIENT_SECRET"]
 DRIVE_ID = "b!dxg-wVYphk2QLxIePQ89DlOz6zZ_l9dGh_YcG1-Yi0KmFLGGJtrCTq4wnl9R691p"
 FILE_ID = "014RM5RVULGNO3VQ2X7ZF22XHUGXK35GRA"
 
-# Get Graph access token
+# Get Graph token
 token = requests.post(
     f"https://login.microsoftonline.com/{TENANT}/oauth2/v2.0/token",
     data={
@@ -37,24 +37,28 @@ response.raise_for_status()
 with open("Announcements.xlsx", "wb") as f:
     f.write(response.content)
 
-# Read workbook
+# Open workbook
 wb = load_workbook("Announcements.xlsx")
 ws = wb["Announcements"]
 
-rows = list(ws.values)
+# Read table directly
+table = ws.tables["AnnouncementsTable"]
+table_range = table.ref
 
-headers_row = rows[0]
-data_rows = rows[1:]
+rows = ws[table_range]
+
+headers_row = [cell.value for cell in rows[0]]
 
 announcements = []
 
-for row in data_rows:
+for row in rows[1:]:
 
-    item = dict(zip(headers_row, row))
+    values = [cell.value for cell in row]
+
+    item = dict(zip(headers_row, values))
 
     title = item.get("Title")
 
-    # Skip blank rows
     if (
         title is None
         or str(title).strip() == ""
@@ -81,7 +85,10 @@ for row in data_rows:
         "author": str(item.get("Author", ""))
     })
 
-# Save website JSON
+print("Announcements found:")
+for a in announcements:
+    print(a["title"])
+
 with open(
     "announcements.json",
     "w",
