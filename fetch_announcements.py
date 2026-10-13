@@ -1,12 +1,16 @@
 import os
 import json
 import requests
+from openpyxl import load_workbook
 
 TENANT = os.environ["AZURE_TENANT_ID"]
 CLIENT = os.environ["AZURE_CLIENT_ID"]
 SECRET = os.environ["AZURE_CLIENT_SECRET"]
 
-# Get access token
+DRIVE_ID = "b!dxg-wVYphk2QLxIePQ89DlOz6zZ_l9dGh_YcG1-Yi0KmFLGGJtrCTq4wnl9R691p"
+FILE_ID = "014RM5RVULGNO3VQ2X7ZF22XHUGXK35GRA"
+
+# Get Graph token
 token = requests.post(
     f"https://login.microsoftonline.com/{TENANT}/oauth2/v2.0/token",
     data={
@@ -21,26 +25,47 @@ headers = {
     "Authorization": f"Bearer {token}"
 }
 
-# Find Announcements.xlsx
+# Download workbook
 url = (
-    "https://graph.microsoft.com/v1.0/users/"
-    "nwcoanadmin@everydaydisciples.org/drive/root/search(q='Announcements.xlsx')"
+    f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}"
+    f"/items/{FILE_ID}/content"
 )
 
-result = requests.get(url, headers=headers)
-result.raise_for_status()
+r = requests.get(url, headers=headers)
+r.raise_for_status()
 
-data = result.json()
+with open("Announcements.xlsx", "wb") as f:
+    f.write(r.content)
 
-print(json.dumps(data, indent=2))
+# Read workbook
+wb = load_workbook("Announcements.xlsx")
+ws = wb["Announcements"]
 
-with open("announcements.json", "w") as f:
+rows = list(ws.values)
+
+headers_row = rows[0]
+data_rows = rows[1:]
+
+announcements = []
+
+for row in data_rows:
+
+    item = dict(zip(headers_row, row))
+
+    announcements.append({
+        "title": str(item.get("Title", "")),
+        "message": str(item.get("Message", "")),
+        "date": str(item.get("PostedDate", "")),
+        "author": str(item.get("Author", ""))
+    })
+
+# Save website JSON
+with open("announcements.json", "w", encoding="utf-8") as f:
     json.dump(
-        [{
-            "title": "Workbook Search",
-            "date": "Now",
-            "message": "Searching OneDrive for Announcements.xlsx"
-        }],
+        announcements,
         f,
-        indent=2
+        indent=2,
+        ensure_ascii=False
     )
+
+print(f"Wrote {len(announcements)} announcements")
