@@ -10,7 +10,7 @@ SECRET = os.environ["AZURE_CLIENT_SECRET"]
 DRIVE_ID = "b!dxg-wVYphk2QLxIePQ89DlOz6zZ_l9dGh_YcG1-Yi0KmFLGGJtrCTq4wnl9R691p"
 FILE_ID = "014RM5RVULGNO3VQ2X7ZF22XHUGXK35GRA"
 
-# Get Graph token
+# Get Graph access token
 token = requests.post(
     f"https://login.microsoftonline.com/{TENANT}/oauth2/v2.0/token",
     data={
@@ -31,11 +31,11 @@ url = (
     f"/items/{FILE_ID}/content"
 )
 
-r = requests.get(url, headers=headers)
-r.raise_for_status()
+response = requests.get(url, headers=headers)
+response.raise_for_status()
 
 with open("Announcements.xlsx", "wb") as f:
-    f.write(r.content)
+    f.write(response.content)
 
 # Read workbook
 wb = load_workbook("Announcements.xlsx")
@@ -52,27 +52,41 @@ for row in data_rows:
 
     item = dict(zip(headers_row, row))
 
-from datetime import datetime
+    title = item.get("Title")
 
-date_value = item.get("PostedDate", "")
+    # Skip blank rows
+    if (
+        title is None
+        or str(title).strip() == ""
+        or str(title).lower() == "none"
+    ):
+        continue
 
-try:
-    if hasattr(date_value, "strftime"):
-        formatted_date = date_value.strftime("%B %d, %Y %I:%M %p")
-    else:
+    date_value = item.get("PostedDate", "")
+
+    try:
+        if hasattr(date_value, "strftime"):
+            formatted_date = date_value.strftime(
+                "%B %d, %Y %I:%M %p"
+            )
+        else:
+            formatted_date = str(date_value)
+    except Exception:
         formatted_date = str(date_value)
-except:
-    formatted_date = str(date_value)
 
-announcements.append({
-    "title": str(item.get("Title", "")),
-    "message": str(item.get("Message", "")),
-    "date": formatted_date,
-    "author": str(item.get("Author", ""))
-})
+    announcements.append({
+        "title": str(item.get("Title", "")),
+        "message": str(item.get("Message", "")),
+        "date": formatted_date,
+        "author": str(item.get("Author", ""))
+    })
 
 # Save website JSON
-with open("announcements.json", "w", encoding="utf-8") as f:
+with open(
+    "announcements.json",
+    "w",
+    encoding="utf-8"
+) as f:
     json.dump(
         announcements,
         f,
