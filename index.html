@@ -84,12 +84,11 @@ fetch('./announcements.json?t=' + Date.now())
           <div class="announcement">
             <h2>${item.title}</h2>
 
+            <p>${message}</p>
+
             <div class="date">
               ${item.date}
             </div>
-
-            <p>${message}</p>
-
           </div>
         `;
       });
